@@ -166,7 +166,8 @@ module AWS
         def canonical_headers req
           headers = []
           req.headers.each_pair do |k,v|
-            headers << [k,v] unless k == 'authorization'
+            kd = k.downcase
+            headers << [kd,v] unless kd == 'authorization'
           end
           headers = headers.sort_by(&:first)
           headers.map{|k,v| "#{k}:#{canonical_header_values(v)}" }.join("\n")
@@ -175,7 +176,49 @@ module AWS
         # @param [String,Array<String>] values
         def canonical_header_values values
           values = [values] unless values.is_a?(Array)
-          values.map(&:to_s).join(',').gsub(/\s+/, ' ').strip
+          values.map { |v| canonical_header_value(v) }.join(',')
+        end
+
+        def canonical_header_value(value)
+          value = value.to_s.strip
+          if value.include?('"')
+            smart_condense_whitespace(value)
+          else
+            # this is much faster, but does not preserve whitespace
+            # inside double-quoted strings
+            value.gsub(/\s+/, ' ')
+          end
+        end
+
+        def smart_condense_whitespace(value)
+          chars = []
+          quoted = false
+          value.chars.each do |char|
+            case char
+            when /\s/
+              if quoted || chars.last != ' '
+                chars << ' '
+              end
+            when '"'
+              quoted = !quoted unless escaped(chars)
+              chars << char
+            else
+              chars << char
+            end
+          end
+          chars.join
+        end
+
+        def escaped(chars)
+          count = 0
+          chars.reverse.each do |char|
+            if char == '\\'
+              count += 1
+            else
+              break
+            end
+          end
+          count % 2 == 1
         end
 
         # @param [Http::Request] req
