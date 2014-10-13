@@ -16,6 +16,9 @@ require 'net/https'
 require 'thread'
 require 'logger'
 
+require 'aws/core/http/patch'
+AWS::Core::Http.patch_net_http_100_continue!
+
 module AWS
   module Core
     module Http

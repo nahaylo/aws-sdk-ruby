@@ -78,22 +78,7 @@ module AWS
     #
     # @attr_reader [Float] http_continue_timeout (1) The number of
     #   seconds to wait for a "100-continue" response before sending the request
-    #   payload.  **This option has no effect unless the {#http_continue_threshold}
-    #   is configured to a positive integer and the payload exeedes the
-    #   threshold.** NOTE: currently there is a bug in Net::HTTP.
-    #   You must call `AWS.patch_net_http_100_continue!` for this feature to work.
-    #   Not supported in Ruby < 1.9.
-    #
-    # @attr_reader [Integer,false] http_continue_threshold (false) If a request
-    #   body exceedes the {#http_continue_threshold} size (in bytes), then
-    #   an "Expect" header will be added to the request with the value of
-    #   "100-continue".  This will cause the SDK to wait up to
-    #   {#http_continue_timeout} seconds for a 100 Contiue HTTP response
-    #   before sending the request payload.  By default, this feature
-    #   is disbled.  Set this option to a positive number of bytes
-    #   to enable 100 continues.  NOTE: currently there is a bug in Net::HTTP.
-    #   You must call `AWS.patch_net_http_100_continue!` for this feature to work.
-    #   Not supported in Ruby < 1.9.
+    #   payload. Not supported in Ruby 1.8.7. Only applies to Amazon S3 API calls.
     #
     # @attr_reader [Object] http_handler The http handler that sends requests
     #   to AWS.  Defaults to an HTTP handler built on net/http.
@@ -454,7 +439,6 @@ module AWS
             :http_handler,
             :http_read_timeout,
             :http_continue_timeout,
-            :http_continue_threshold,
             :log_formatter,
             :log_level,
             :logger,
@@ -503,6 +487,7 @@ module AWS
 
       add_option :http_continue_timeout, 1
 
+      # deprecated
       add_option :http_continue_threshold, false
 
       add_option :http_idle_timeout, 5

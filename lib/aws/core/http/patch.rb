@@ -83,10 +83,17 @@ module AWS
                  # avoid a dependency on OpenSSL
                  defined?(OpenSSL::SSL) ? OpenSSL::SSL::SSLError : IOError,
                  Timeout::Error => exception
-            if count == 0 && IDEMPOTENT_METHODS_.include?(req.method)
+            if count == 0 && Net::HTTP::IDEMPOTENT_METHODS_.include?(req.method)
               count += 1
               @socket.close if @socket and not @socket.closed?
               D "Conn close because of error #{exception}, and retry"
+              if req.body_stream
+                if req.body_stream.respond_to?(:rewind)
+                  req.body_stream.rewind
+                else
+                  raise
+                end
+              end
               retry
             end
             D "Conn close because of error #{exception}"
@@ -94,6 +101,12 @@ module AWS
             raise
           end
 
+          end_transport req, res
+          res
+        rescue => exception
+          D "Conn close because of error #{exception}"
+          @socket.close if @socket and not @socket.closed?
+          raise exception
         end
       end
 

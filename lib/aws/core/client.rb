@@ -562,9 +562,9 @@ module AWS
         http_request.headers["user-agent"] = user_agent_string
 
         if
-          @config.http_continue_threshold and
+          http_request.service_ruby_name == 's3' and
           http_request.headers['content-length'] and
-          http_request.headers['content-length'].to_i > @config.http_continue_threshold
+          http_request.headers['content-length'].to_i > 0
         then
           http_request.headers["expect"] = "100-continue"
           http_request.continue_timeout = @config.http_continue_timeout
